@@ -7,6 +7,9 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 /*
 This is the class that contains all the default values for each OpMode so there is no need to
 redefine anything, you can redefine the default values in a OpMode with the actualInit() and actualLoop()
@@ -27,10 +30,28 @@ public class BaseOpMode extends OpMode {
     Servo IntakeRotate;
     Servo ExtenderRotate;
     CRServo Intake;
-    ColorSensor ColorSensor;
+    com.qualcomm.robotcore.hardware.ColorSensor ColorSensor;
     CRServo HangServoRight;
     CRServo HangServoLeft;
     Servo SpoonServo;
+
+    // Variables for hanging tasks
+    boolean dpadDownPressed = false;
+    long moveStartTime = 0;
+    boolean detect = false;
+    ExecutorService executorService = Executors.newFixedThreadPool(4);
+    int unknown = 0;
+    int red = 1;
+    int blue = 2;
+    int yellow = 3;
+    volatile int detectedColor;
+    // Thresholds for color detection
+    int redThreshold = 900;
+    int greenThreshold = 900;
+    int blueThreshold = 750;
+    public void setThreadAmount(int amount) {
+         executorService = Executors.newFixedThreadPool(amount);
+    }
     protected void actualInit()
     {
         FR = hardwareMap.get(DcMotorEx.class, "FR");
@@ -56,17 +77,14 @@ public class BaseOpMode extends OpMode {
         RDOM.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // Turn the motor back on when we are done
         HDOM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Reset the motor encoder
         HDOM.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // Turn the motor back on when we are done
+        FEXT.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Reset the motor encoder
+        FEXT.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // Reset the motor encoder
+        LLIFT.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Reset the motor encoder
+        LLIFT.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // Reset the motor encoder
+
         HangServoLeft.setDirection(CRServo.Direction.REVERSE);
-        //LLIFT.setDirection(DcMotor.Direction.REVERSE);
-        //fl = hardwareMap.get(DcMotorEx.class, "fl");
-        //fr = hardwareMap.get(DcMotorEx.class, "fr");
-        //bl = hardwareMap.get(DcMotorEx.class, "bl");
-        //br = hardwareMap.get(DcMotorEx.class, "br");
-        //fl.setDirection(DcMotor.Direction.REVERSE);
-        //fr.setDirection(DcMotor.Direction.FORWARD);
-        //bl.setDirection(DcMotor.Direction.REVERSE);
-        //br.setDirection(DcMotor.Direction.FORWARD);
-        //intakeServo = hardwareMap.get(CRServo.class, "intake");
+        LLIFT.setDirection(DcMotor.Direction.REVERSE);
+        RLIFT.setDirection(DcMotor.Direction.REVERSE);
     }
     protected void extendInit()
     {
@@ -98,5 +116,39 @@ public class BaseOpMode extends OpMode {
     {
         actualLoop();
         extendLoop();
+    }
+    protected void actualStart()
+    {
+    }
+    protected void extendStart()
+    {
+    }
+    /**
+     * @deprecated
+     * This method is deprecated and has been replaced by extendLoop() and actualLoop()
+     */
+    @Deprecated
+    @Override
+    public final void start()
+    {
+        actualStart();
+        extendStart();
+    }
+    protected void actualStop()
+    {
+    }
+    protected void extendStop()
+    {
+    }
+    /**
+     * @deprecated
+     * This method is deprecated and has been replaced by extendLoop() and actualLoop()
+     */
+    @Deprecated
+    @Override
+    public final void stop()
+    {
+        actualStop();
+        extendStop();
     }
 }
