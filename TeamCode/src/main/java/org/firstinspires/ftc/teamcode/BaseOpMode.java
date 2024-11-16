@@ -28,7 +28,8 @@ public class BaseOpMode extends OpMode {
     Servo ExtenderRotate;
     CRServo Intake;
     ColorSensor ColorSensor;
-    CRServo HangServo;
+    CRServo HangServoRight;
+    CRServo HangServoLeft;
     Servo SpoonServo;
     protected void actualInit()
     {
@@ -46,7 +47,8 @@ public class BaseOpMode extends OpMode {
         ExtenderRotate = hardwareMap.get(Servo.class, "ExtenderRotate");
         Intake = hardwareMap.get(CRServo.class, "Intake");
         ColorSensor = hardwareMap.get(ColorSensor.class, "ColorSensor");
-        HangServo = hardwareMap.get(CRServo.class, "HangServo");
+        HangServoRight = hardwareMap.get(CRServo.class, "HangServoRight");
+        HangServoLeft = hardwareMap.get(CRServo.class, "HangServoLeft");
         SpoonServo = hardwareMap.get(Servo.class, "SpoonServo");
         LDOM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Reset the motor encoder
         LDOM.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // Turn the motor back on when we are done
@@ -54,6 +56,7 @@ public class BaseOpMode extends OpMode {
         RDOM.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // Turn the motor back on when we are done
         HDOM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Reset the motor encoder
         HDOM.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // Turn the motor back on when we are done
+        HangServoLeft.setDirection(CRServo.Direction.REVERSE);
         //LLIFT.setDirection(DcMotor.Direction.REVERSE);
         //fl = hardwareMap.get(DcMotorEx.class, "fl");
         //fr = hardwareMap.get(DcMotorEx.class, "fr");
