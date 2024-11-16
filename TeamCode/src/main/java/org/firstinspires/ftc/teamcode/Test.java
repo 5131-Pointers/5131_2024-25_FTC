@@ -33,7 +33,7 @@ public class Test extends BaseOpMode {
 
         else if (gamepad1.left_bumper) {Intake.setPower(1);}
 
-        if (gamepad1.dpad_up) {FEXT.setPower(.1);}
+        if (gamepad1.dpad_up) {FEXT.setPower(.4);}
         else {FEXT.setPower(0);}
         if (gamepad1.dpad_down) {HangServoRight.setPower(-1);HangServoLeft.setPower(-1);}
         else {HangServoRight.setPower(0);HangServoLeft.setPower(0);}
@@ -41,6 +41,8 @@ public class Test extends BaseOpMode {
         else {RLIFT.setPower(0);LLIFT.setPower(0);}
         if (gamepad1.dpad_right) {RLIFT.setPower(-.8);LLIFT.setPower(-.8);}
         else {RLIFT.setPower(0);LLIFT.setPower(0);}
+        if (gamepad2.a) {SpoonServo.setPosition(.3);}
+
 
     }
 }
