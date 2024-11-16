@@ -88,11 +88,11 @@ public class TestTeleOp extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            HangingTasks();
-            extenderAdjustment();
-            intakeSpinner();
-            extenderRotateMovement();
-            lift();
+            //HangingTasks();
+            //extenderAdjustment();
+            //intakeSpinner();
+            //extenderRotateMovement();
+            //lift();
             telemetry.addData("ExtenderPos", FEXT.getCurrentPosition());
             telemetry.addData("LeftLiftPos", LLIFT.getCurrentPosition());
 
@@ -122,6 +122,7 @@ public class TestTeleOp extends LinearOpMode {
         }
     }
     public void lift() {
+        sleep(1000);
         // Get the current encoder position for the left lift motor
         int leftLiftPosition = LLIFT.getCurrentPosition();
 

@@ -41,9 +41,9 @@ public class BaseOpMode extends OpMode {
     boolean detect = false;
     ExecutorService executorService = Executors.newFixedThreadPool(4);
     int unknown = 0;
-    int red = 1;
-    int blue = 2;
-    int yellow = 3;
+    final static int red = 1;
+    final static int blue = 2;
+    final static int yellow = 3;
     volatile int detectedColor;
     // Thresholds for color detection
     int redThreshold = 900;
