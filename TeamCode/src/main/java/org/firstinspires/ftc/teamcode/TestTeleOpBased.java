@@ -29,6 +29,12 @@ public class TestTeleOpBased extends BaseOpMode {
         else if (detectedColor == yellow) {
             telemetry.addData("Detected Color", "yellow");
         }
+        telemetry.addData("Rumbling", gamepad2.isRumbling());
+        telemetry.addData("RTrigger", gamepad2.right_trigger);
+        telemetry.addData("LTrigger", gamepad2.left_trigger);
+        telemetry.addData("ExtenderPos", FEXT.getCurrentPosition());
+
+
         telemetry.update();
     }
     @Override
@@ -56,10 +62,10 @@ public class TestTeleOpBased extends BaseOpMode {
     }
     private void sensingTasks() {
         while (!Thread.interrupted()) {
-            ColorSensor();
+            ColorDetection();
         }
     }
-    public void ColorSensor() {
+    public void ColorDetection() {
         // Detect if the color is red
         if (ColorSensor.red() > 800 && ColorSensor.red() > ColorSensor.blue() && ColorSensor.red() > ColorSensor.green()) {
             detectedColor = red;
@@ -88,12 +94,12 @@ public class TestTeleOpBased extends BaseOpMode {
         double power = Range.clip(joystickInput, -1.0, 1.0) * 0.8; // Scaling to a safe power range
 
         // Ensure the lift does not exceed the encoder limits using only the left lift position
-        if (leftLiftPosition >= 5500 && power > 0) {
+        if (leftLiftPosition >= 7000 && power > 0) {
             // Stop lifting if the position is at the upper limit
             LLIFT.setPower(0);
             RLIFT.setPower(0);
 
-        } else if (leftLiftPosition <= 0 && power < 0) {
+        } else if (leftLiftPosition <= 10 && power < 0) {
             // Stop lowering if the position is at the lower limit
             LLIFT.setPower(0);
             RLIFT.setPower(0);
@@ -106,32 +112,89 @@ public class TestTeleOpBased extends BaseOpMode {
         }
     }
     public void extenderRotateMovement() {
+        int leftLiftPosition = LLIFT.getCurrentPosition();
         if (gamepad2.a) {
-            ExtenderRotate.setPosition(0.53);
+            ExtenderRotate.setPosition(0.88);
             IntakeRotate.setPosition(0.15); //ready for pickup
         }
         else if (gamepad2.y) {
-            ExtenderRotate.setPosition(0);
-            IntakeRotate.setPosition(0.75);
+            FEXT.setPower(-0.4);
+            ExtenderRotate.setPosition(0.3);
+            IntakeRotate.setPosition(0.85);
+            SpoonServo.setPosition(0.35);
+            while (FEXT.getCurrentPosition() > 20) {};
+            FEXT.setPower(0);
+            if (leftLiftPosition < 100 && FEXT.getCurrentPosition() < 50) {
+                try {
+                    Thread.sleep(400);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                Intake.setPower(-0.5);
+                try {
+                    Thread.sleep(400);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+                Intake.setPower(0);
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                ExtenderRotate.setPosition(0.5);
+                IntakeRotate.setPosition(0.15); //ready for pickup
+            }
         }
         else if (gamepad2.x) {
-            SpoonServo.setPosition(0.3);
+            if (leftLiftPosition > 500) {
+                SpoonServo.setPosition(1);
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                SpoonServo.setPosition(0.35);
+            }
         }
         else if (gamepad2.b) {
-            SpoonServo.setPosition(1); // drop pos
+            ExtenderRotate.setPosition(0.7);
+        }
+        if (gamepad2.left_trigger > gamepad2.right_trigger || gamepad2.left_trigger > 0) {
+            Intake.setPower(gamepad2.left_trigger);
+            if (detectedColor == red || detectedColor == yellow) {
+                Intake.setPower(0);
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                ExtenderRotate.setPosition(0.7);
+            }
+            else if (detectedColor == blue) {
+                Intake.setPower(-1);
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                Intake.setPower(0);
+            }
+        }
+        else {
+            Intake.setPower(-gamepad2.right_trigger);
         }
 
     }
     public void intakeSpinner() {
-        if (gamepad2.right_bumper) {
-            Intake.setPower(0.8);
-        }
-        else if (detectedColor == red) {
-            Intake.setPower(0);
-        }
-        if (gamepad2.left_bumper) {
-            Intake.setPower(-1);
-        }
+        //if (gamepad2.right_trigger > gamepad2.left_trigger || gamepad2.right_trigger > 0) {
+        //    Intake.setPower(gamepad2.right_trigger);
+        //}
+        //else {
+        //    Intake.setPower(-gamepad2.left_trigger);
+        //}
+
     }
     public void extenderAdjustment() {
         // Get the current position of the extender motor
@@ -147,42 +210,19 @@ public class TestTeleOpBased extends BaseOpMode {
         FEXT.setPower(power);
     }
     public void HangingTasks() {
-        // If D-pad Down is pressed, start moving for 3 seconds
-        if (gamepad1.dpad_down && !dpadDownPressed) {
-            moveStartTime = System.currentTimeMillis();
-            dpadDownPressed = true;
-        }
-        // Move the servos for 12 seconds after D-pad Down
-        if (dpadDownPressed && System.currentTimeMillis() - moveStartTime < 12000) {
+        if (gamepad1.dpad_down) {
             HangServoRight.setPower(1);
             HangServoLeft.setPower(1);
-        } else {
-            dpadDownPressed = false; // Stop after 3 seconds
-            HangServoRight.setPower(0);
-            HangServoLeft.setPower(0);
         }
-        // If right bumper is pressed, move HangServoRight
         if (gamepad1.right_bumper) {
-            HangServoRight.setPower(-1); // Reverse direction
-        } else {
-            // If right bumper is NOT pressed, stop HangServoRight
-            if (!gamepad1.dpad_down) { // Don't stop if the DpadDown is active
-                HangServoRight.setPower(0);
-            }
-        }
-        // If left bumper is pressed, move HangServoLeft
-        if (gamepad1.left_bumper) {
             HangServoLeft.setPower(-1); // Reverse direction
-        } else {
-            // If left bumper is NOT pressed, stop HangServoLeft
-            if (!gamepad1.dpad_down) { // Don't stop if the DpadDown is active
-                HangServoLeft.setPower(0);
-            }
         }
-        // Additional safety condition to stop both servos when neither bumper is pressed
-        if (!gamepad1.right_bumper && !gamepad1.left_bumper && !dpadDownPressed) {
-            HangServoRight.setPower(0);
-            HangServoLeft.setPower(0);
+        if (gamepad1.left_bumper) {
+            HangServoRight.setPower(-1); // Reverse direction
+        }
+        else {
+            HangServoRight.setPower(0); // Reverse direction
+            HangServoLeft.setPower(0); // Reverse direction
         }
     }
 }
