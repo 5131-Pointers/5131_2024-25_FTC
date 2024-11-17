@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -39,12 +40,13 @@ public class BaseOpMode extends OpMode {
     boolean dpadDownPressed = false;
     long moveStartTime = 0;
     boolean detect = false;
-    ExecutorService executorService = Executors.newFixedThreadPool(4);
+    ExecutorService executorService = Executors.newFixedThreadPool(5);
     int unknown = 0;
     final static int red = 1;
     final static int blue = 2;
     final static int yellow = 3;
     volatile int detectedColor;
+    MecanumDrive drive;
     // Thresholds for color detection
     int redThreshold = 900;
     int greenThreshold = 900;
@@ -54,10 +56,10 @@ public class BaseOpMode extends OpMode {
     }
     protected void actualInit()
     {
-        FR = hardwareMap.get(DcMotorEx.class, "FR");
-        FL = hardwareMap.get(DcMotorEx.class, "FR");
-        BR = hardwareMap.get(DcMotorEx.class, "BR");
-        BL = hardwareMap.get(DcMotorEx.class, "BL");
+        FR = hardwareMap.get(DcMotorEx.class, "rightFront");
+        FL = hardwareMap.get(DcMotorEx.class, "leftFront");
+        BR = hardwareMap.get(DcMotorEx.class, "rightBack");
+        BL = hardwareMap.get(DcMotorEx.class, "leftBack");
         LDOM = BL;
         RDOM = FR;
         HDOM = FL;
@@ -71,6 +73,7 @@ public class BaseOpMode extends OpMode {
         HangServoRight = hardwareMap.get(CRServo.class, "HangServoRight");
         HangServoLeft = hardwareMap.get(CRServo.class, "HangServoLeft");
         SpoonServo = hardwareMap.get(Servo.class, "SpoonServo");
+        drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
         LDOM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Reset the motor encoder
         LDOM.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // Turn the motor back on when we are done
         RDOM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Reset the motor encoder

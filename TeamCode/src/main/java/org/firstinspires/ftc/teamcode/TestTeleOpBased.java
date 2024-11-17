@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.roadrunner.PoseVelocity2d;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.Range;
 
@@ -11,9 +13,11 @@ public class TestTeleOpBased extends BaseOpMode {
         executorService.submit(this::hangingTasks);
         executorService.submit(this::liftingTasks);
         executorService.submit(this::sensingTasks);
+        executorService.submit(this::mecanumDrive);
     }
     @Override
     public void extendLoop() {
+
         telemetry.addData("ExtenderPos", FEXT.getCurrentPosition());
         telemetry.addData("LeftLiftPos", LLIFT.getCurrentPosition());
 
@@ -64,6 +68,22 @@ public class TestTeleOpBased extends BaseOpMode {
         while (!Thread.interrupted()) {
             ColorDetection();
         }
+    }
+    private void mecanumDrive() {
+        while (!Thread.interrupted()) {
+            Drive();
+        }
+    }
+    public void Drive() {
+        drive.setDrivePowers(new PoseVelocity2d(
+                new Vector2d(
+                        -gamepad1.left_stick_y,
+                        -gamepad1.left_stick_x
+                ),
+                -gamepad1.right_stick_x
+        ));
+
+        drive.updatePoseEstimate();
     }
     public void ColorDetection() {
         // Detect if the color is red
