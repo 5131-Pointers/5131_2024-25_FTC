@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.CRServoImplEx;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -25,22 +26,22 @@ public class BaseOpMode extends OpMode {
     DcMotorEx LDOM;
     DcMotorEx RDOM;
     DcMotorEx HDOM;
-    DcMotorEx FEXT;
     DcMotorEx RLIFT;
     DcMotorEx LLIFT;
-    Servo IntakeRotate;
-    Servo ExtenderRotate;
-    CRServo Intake;
-    com.qualcomm.robotcore.hardware.ColorSensor ColorSensor;
-    CRServo HangServoRight;
-    CRServo HangServoLeft;
-    Servo SpoonServo;
+    DcMotorEx bottomRotate;
+    DcMotorEx topRotate;
+    CRServo intakeServo1;
+    CRServo intakeServo2;
+    Servo wrist;
+    Servo angleServo;
+
+
 
     // Variables for hanging tasks
     boolean dpadDownPressed = false;
     long moveStartTime = 0;
     boolean detect = false;
-    ExecutorService executorService = Executors.newFixedThreadPool(5);
+    ExecutorService executorService = Executors.newFixedThreadPool(3);
     int unknown = 0;
     final static int red = 1;
     final static int blue = 2;
@@ -56,38 +57,40 @@ public class BaseOpMode extends OpMode {
     }
     protected void actualInit()
     {
+
         FR = hardwareMap.get(DcMotorEx.class, "rightFront");
         FL = hardwareMap.get(DcMotorEx.class, "leftFront");
         BR = hardwareMap.get(DcMotorEx.class, "rightBack");
         BL = hardwareMap.get(DcMotorEx.class, "leftBack");
-        LDOM = BL;
-        RDOM = FR;
-        HDOM = FL;
-        FEXT = hardwareMap.get(DcMotorEx.class, "FEXT");
+
         RLIFT = hardwareMap.get(DcMotorEx.class, "RLIFT");
         LLIFT = hardwareMap.get(DcMotorEx.class, "LLIFT");
-        IntakeRotate = hardwareMap.get(Servo.class, "IntakeRotate");
-        ExtenderRotate = hardwareMap.get(Servo.class, "ExtenderRotate");
-        Intake = hardwareMap.get(CRServo.class, "Intake");
-        ColorSensor = hardwareMap.get(ColorSensor.class, "ColorSensor");
-        HangServoRight = hardwareMap.get(CRServo.class, "HangServoRight");
-        HangServoLeft = hardwareMap.get(CRServo.class, "HangServoLeft");
-        SpoonServo = hardwareMap.get(Servo.class, "SpoonServo");
+        bottomRotate = hardwareMap.get(DcMotorEx.class, "bottomRotate");
+        topRotate = hardwareMap.get(DcMotorEx.class, "topRotate");
+
+        intakeServo1 = hardwareMap.get(CRServo.class, "intakeServo1");
+        intakeServo2 = hardwareMap.get(CRServo.class, "intakeServo2");
+        wrist = hardwareMap.get(Servo.class, "wrist");
+        angleServo = hardwareMap.get(Servo.class, "angleServo");
+
+
         drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
-        LDOM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Reset the motor encoder
-        LDOM.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // Turn the motor back on when we are done
-        RDOM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Reset the motor encoder
-        RDOM.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // Turn the motor back on when we are done
-        HDOM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Reset the motor encoder
-        HDOM.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // Turn the motor back on when we are done
-        FEXT.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Reset the motor encoder
-        FEXT.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // Reset the motor encoder
+        bottomRotate.setTargetPosition(0);
+
+        //bottomRotate.setMode(DcMotor.RunMode.RUN_TO_POSITION); // Reset the motor encoder
+        //topRotate.setMode(DcMotor.RunMode.RUN_TO_POSITION); // Reset the motor encoder
+
         LLIFT.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Reset the motor encoder
         LLIFT.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // Reset the motor encoder
 
-        HangServoLeft.setDirection(CRServo.Direction.REVERSE);
         LLIFT.setDirection(DcMotor.Direction.REVERSE);
         RLIFT.setDirection(DcMotor.Direction.REVERSE);
+
+
+
+
+
+
     }
     protected void extendInit()
     {

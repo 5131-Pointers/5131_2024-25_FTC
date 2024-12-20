@@ -5,20 +5,17 @@ import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.Range;
 
-@TeleOp(name = "TestTeleOpBased", group = "Test")
-public class TestTeleOpBased extends BaseOpMode {
+@TeleOp(name = "RedTeleOp", group = "Competition")
+public class RedTeleOp extends BaseOpMode {
     @Override
     public void extendStart() {
         executorService.submit(this::servoTasks);
-        executorService.submit(this::hangingTasks);
         executorService.submit(this::liftingTasks);
-        executorService.submit(this::sensingTasks);
         executorService.submit(this::mecanumDrive);
     }
     @Override
     public void extendLoop() {
 
-        telemetry.addData("ExtenderPos", FEXT.getCurrentPosition());
         telemetry.addData("LeftLiftPos", LLIFT.getCurrentPosition());
 
         if (detectedColor == unknown) {
@@ -36,7 +33,6 @@ public class TestTeleOpBased extends BaseOpMode {
         telemetry.addData("Rumbling", gamepad2.isRumbling());
         telemetry.addData("RTrigger", gamepad2.right_trigger);
         telemetry.addData("LTrigger", gamepad2.left_trigger);
-        telemetry.addData("ExtenderPos", FEXT.getCurrentPosition());
 
 
         telemetry.update();
@@ -48,27 +44,25 @@ public class TestTeleOpBased extends BaseOpMode {
 
     private void servoTasks() {
         while (!Thread.interrupted()) {
+            /*
             extenderAdjustment();
             intakeSpinner();
             extenderRotateMovement();
+
+             */
         }
     }
     private void liftingTasks() {
         while (!Thread.interrupted()) {
+            /*
             lift();
+            HangingTasks();
+            ColorDetection();
+
+             */
         }
     }
 
-    private void hangingTasks() {
-        while (!Thread.interrupted()) {
-            HangingTasks();
-        }
-    }
-    private void sensingTasks() {
-        while (!Thread.interrupted()) {
-            ColorDetection();
-        }
-    }
     private void mecanumDrive() {
         while (!Thread.interrupted()) {
             Drive();
@@ -85,6 +79,7 @@ public class TestTeleOpBased extends BaseOpMode {
 
         drive.updatePoseEstimate();
     }
+    /*
     public void ColorDetection() {
         // Detect if the color is red
         if (ColorSensor.red() > 800 && ColorSensor.red() > ColorSensor.blue() && ColorSensor.red() > ColorSensor.green()) {
@@ -111,10 +106,10 @@ public class TestTeleOpBased extends BaseOpMode {
         double joystickInput = -gamepad2.right_stick_y;  // Invert for correct direction
 
         // Calculate motor power based on joystick input (scale from -1 to 1)
-        double power = Range.clip(joystickInput, -1.0, 1.0) * 0.8; // Scaling to a safe power range
+        double power = Range.clip(joystickInput, -1.0, 1.0) * 0.9; // Scaling to a safe power range
 
         // Ensure the lift does not exceed the encoder limits using only the left lift position
-        if (leftLiftPosition >= 7000 && power > 0) {
+        if (leftLiftPosition >= 6000 && power > 0) {
             // Stop lifting if the position is at the upper limit
             LLIFT.setPower(0);
             RLIFT.setPower(0);
@@ -124,7 +119,13 @@ public class TestTeleOpBased extends BaseOpMode {
             LLIFT.setPower(0);
             RLIFT.setPower(0);
 
-        } else {
+        }
+        else if (leftLiftPosition > 1000 && power == 0 && leftLiftPosition < 6000) {
+            LLIFT.setPower(0.08);
+            RLIFT.setPower(0.08);
+
+        }
+        else {
             // Apply the calculated power if the lift is within limits
             LLIFT.setPower(power);
             RLIFT.setPower(power);
@@ -135,7 +136,7 @@ public class TestTeleOpBased extends BaseOpMode {
     public void extenderRotateMovement() {
         int leftLiftPosition = LLIFT.getCurrentPosition();
         if (gamepad2.a) {
-            ExtenderRotate.setPosition(0.88);
+            ExtenderRotate.setPosition(0.885);
             IntakeRotate.setPosition(0.15); //ready for pickup
         }
         else if (gamepad2.y) {
@@ -147,7 +148,7 @@ public class TestTeleOpBased extends BaseOpMode {
             FEXT.setPower(0);
             if (leftLiftPosition < 100 && FEXT.getCurrentPosition() < 50) {
                 try {
-                    Thread.sleep(400);
+                    Thread.sleep(700);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -182,8 +183,8 @@ public class TestTeleOpBased extends BaseOpMode {
         else if (gamepad2.b) {
             ExtenderRotate.setPosition(0.7);
         }
-        if (gamepad2.left_trigger > gamepad2.right_trigger || gamepad2.left_trigger > 0) {
-            Intake.setPower(gamepad2.left_trigger);
+        if (gamepad2.right_trigger > gamepad2.left_trigger || gamepad2.right_trigger > 0) {
+            Intake.setPower(gamepad2.right_trigger);
             if (detectedColor == red || detectedColor == yellow) {
                 Intake.setPower(0);
                 try {
@@ -204,7 +205,7 @@ public class TestTeleOpBased extends BaseOpMode {
             }
         }
         else {
-            Intake.setPower(-gamepad2.right_trigger);
+            Intake.setPower(-gamepad2.left_trigger);
         }
 
     }
@@ -222,12 +223,11 @@ public class TestTeleOpBased extends BaseOpMode {
         int currentPosition = FEXT.getCurrentPosition();
         double joystickInput = -gamepad2.left_stick_y;
         // Scale joystick input to motor power
-        double power = Range.clip(joystickInput, -1.0, 1.0) * 0.25;  // Max power scaled to 0.4
-        if (currentPosition >= 300 && power > 0) { //encoder limit
+        double power = Range.clip(joystickInput, -1.0, 1.0) * 0.3;  // Max power scaled to 0.4
+        if (currentPosition >= 360 && power > 0) { //encoder limit
             power = 0;  //upper limit stop
-        } else if (currentPosition <= 0 && power < 0) {
-            power = 0;  //lower limit stop
         }
+
         FEXT.setPower(power);
     }
     public void HangingTasks() {
@@ -246,4 +246,8 @@ public class TestTeleOpBased extends BaseOpMode {
             HangServoLeft.setPower(0); // Reverse direction
         }
     }
+
+     */
 }
+
+

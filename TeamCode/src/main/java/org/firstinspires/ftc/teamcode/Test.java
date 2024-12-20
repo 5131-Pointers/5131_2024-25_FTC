@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.CRServo;
 public class Test extends BaseOpMode {
     @Override
     public void extendLoop() {
+        /*
         telemetry.addData("LDOM", LDOM.getCurrentPosition());
         telemetry.addData("RDOM", RDOM.getCurrentPosition());
         telemetry.addData("HDOM", RDOM.getCurrentPosition());
@@ -71,4 +72,5 @@ public class Test extends BaseOpMode {
 
 
     }
+
 }
