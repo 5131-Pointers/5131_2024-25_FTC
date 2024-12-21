@@ -22,9 +22,7 @@ public class threadingMecanumDrive extends LinearOpMode {
     public DcMotor BL;
     public DcMotor RLIFT;
     public DcMotor LLIFT;
-    public DcMotor bottomRotate;
     public DcMotor topRotate;
-
 
 
     //2 servos used to grab pixels
@@ -35,22 +33,19 @@ public class threadingMecanumDrive extends LinearOpMode {
     public CRServo intakeServo2;
     private int targetPosition = 0; // Initialize target position
     private int topRotateTargetPosition = 0; // Target position for topRotate
-    private int bottomRotateTargetPosition = 0; // Target position for topRotate
 
 
     MecanumDrive drive;
 
 
-
     @Override
-    public void runOpMode(){
+    public void runOpMode() {
         FR = hardwareMap.dcMotor.get("rightFront");
         FL = hardwareMap.dcMotor.get("leftFront");
         BR = hardwareMap.dcMotor.get("rightBack");
         BL = hardwareMap.dcMotor.get("leftBack");
         RLIFT = hardwareMap.dcMotor.get("RLIFT");
         LLIFT = hardwareMap.dcMotor.get("LLIFT");
-        bottomRotate = hardwareMap.dcMotor.get("bottomRotate");
         topRotate = hardwareMap.dcMotor.get("topRotate");
 
         intakeServo1 = hardwareMap.crservo.get("intakeServo1");
@@ -62,17 +57,14 @@ public class threadingMecanumDrive extends LinearOpMode {
 
         RLIFT.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         LLIFT.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        bottomRotate.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         topRotate.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         RLIFT.setTargetPosition(0);
         LLIFT.setTargetPosition(0);
-        bottomRotate.setTargetPosition(0);
         topRotate.setTargetPosition(0);
 
         LLIFT.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         RLIFT.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        bottomRotate.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         topRotate.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         LLIFT.setDirection(DcMotor.Direction.REVERSE);
@@ -80,14 +72,11 @@ public class threadingMecanumDrive extends LinearOpMode {
 
         RLIFT.setPower(0.5);
         LLIFT.setPower(0.5);
-        bottomRotate.setPower(1);
         topRotate.setPower(1);
 
         ExecutorService executorService = Executors.newFixedThreadPool(2);
         executorService.submit(this::mecanumDrive);
         executorService.submit(this::servoTasks);
-
-
 
 
         waitForStart();
@@ -96,14 +85,11 @@ public class threadingMecanumDrive extends LinearOpMode {
             Drive();
             armTesting();
             lifting();
-            bottomArmTesting();
             telemetry.addData("LLIFT Encoder", LLIFT.getCurrentPosition());
             telemetry.addData("RLIFT Encoder", RLIFT.getCurrentPosition());
-            telemetry.addData("Bottom Rotate Encoder", bottomRotate.getCurrentPosition());
             telemetry.addData("top Rotate Encoder", topRotate.getCurrentPosition());
 
             telemetry.addData("TopRotateTargetPosition", topRotateTargetPosition);
-            telemetry.addData("bottomRotateTargetPosition", bottomRotateTargetPosition);
 
             telemetry.update();
         }
@@ -115,16 +101,16 @@ public class threadingMecanumDrive extends LinearOpMode {
     private void mecanumDrive() {
         while (!Thread.interrupted()) {
             Drive();
+
         }
     }
+
     private void servoTasks() {
         while (!Thread.interrupted()) {
             lifting();
             armTesting();
-            bottomArmTesting();
         }
     }
-
 
 
     public void Drive() {
@@ -138,7 +124,8 @@ public class threadingMecanumDrive extends LinearOpMode {
 
         drive.updatePoseEstimate();
     }
-    public void lifting() {
+
+    /*public void lifting() {
         if (gamepad2.dpad_up) {
             targetPosition = Math.min(targetPosition + 25, 1250); // Increment by 50, capped at 1250
         }
@@ -148,12 +135,38 @@ public class threadingMecanumDrive extends LinearOpMode {
         RLIFT.setTargetPosition(targetPosition);
         LLIFT.setTargetPosition(targetPosition);
 
+    }*/
+
+    public void lifting() {
+        // Get the y-axis value of the gamepad2 right joystick (range is -1 to 1)
+        double joystickInput = gamepad2.left_stick_y; // Use left joystick for vertical control
+
+        // Map the joystick input to a range suitable for your target position
+        // Assuming joystick input ranges from -1 (down) to 1 (up), we map this to a target position range of 0 to 1250
+        // If the joystick is pushed all the way up, it will reach the max target position (1250)
+        // If the joystick is pushed all the way down, it will reach the min target position (0)
+        targetPosition = (int) Range.clip(targetPosition + (int)(joystickInput * 10), 0, 1250);
+
+        // Set the target position for both lift motors
+        RLIFT.setTargetPosition(targetPosition);
+        LLIFT.setTargetPosition(targetPosition);
+
+        // Set power to move motors toward the target position
+        RLIFT.setPower(0.5);
+        LLIFT.setPower(0.5);
+
+        // Telemetry for debugging
+        telemetry.addData("Target Position", targetPosition);
+        telemetry.addData("Joystick Input", joystickInput);
+        telemetry.addData("RLIFT Encoder", RLIFT.getCurrentPosition());
+        telemetry.addData("LLIFT Encoder", LLIFT.getCurrentPosition());
+        telemetry.update();
     }
-    public void armTesting(){
+
+    public void armTesting() {
         if (gamepad1.y) {
             if (topRotateTargetPosition < 1000) {
                 topRotateTargetPosition = topRotateTargetPosition + 5;
-                bottomRotateTargetPosition = bottomRotateTargetPosition + 5;
             }
         }
 
@@ -161,41 +174,41 @@ public class threadingMecanumDrive extends LinearOpMode {
         if (gamepad1.a) {
             if (topRotateTargetPosition > 0) {
                 topRotateTargetPosition = topRotateTargetPosition - 5;
-                bottomRotateTargetPosition = bottomRotateTargetPosition - 5;
             }
 
         }
 
-        if (gamepad1.x) {
-            bottomRotateTargetPosition = bottomRotateTargetPosition - 5;
-        }
-        if (gamepad1.b) {
-            if (bottomRotateTargetPosition < topRotateTargetPosition)
-                bottomRotateTargetPosition = bottomRotateTargetPosition + 5;
-        }
 
         topRotate.setTargetPosition(topRotateTargetPosition);
-        bottomRotate.setTargetPosition(bottomRotateTargetPosition);
-
-
-    }
-    public void bottomArmTesting() {
-        /*
-        if (gamepad1.x) {
-            bottomRotateTargetPosition = Math.min(bottomRotateTargetPosition + 1, 1000); // Increment by 25, capped at 1000
-        }
-        if (gamepad1.b) {
-            bottomRotateTargetPosition = Math.min(bottomRotateTargetPosition - 1, topRotateTargetPosition + 25); // Increment by 25, capped at 1000
-        }
-        bottomRotate.setTargetPosition(bottomRotateTargetPosition);
-
-         */
 
 
     }
 
+    public void ServoMovement() {
+        if (gamepad2.left_trigger > 0.9) { //spit out
+            intakeServo1.setPower(0.5);
+            intakeServo2.setPower(-0.5);
+
+        } else if (gamepad2.right_trigger > 0.9) { //intake
+            intakeServo1.setPower(-0.5);
+            intakeServo2.setPower(0.5);
+        } else {
+            intakeServo1.setPower(0);
+            intakeServo2.setPower(0);
+        }
+        double wristPosition = wrist.getPosition();
+
+        if (gamepad2.right_bumper) {
+            wristPosition += 0.01;
+            sleep(5);
+        } else if (gamepad2.left_bumper) {
+            wristPosition -= 0.01;
+            sleep(5);
+        }
+
+        wristPosition = Range.clip(wristPosition, 0, 1);
+        wrist.setPosition(wristPosition);
 
 
-
-
+    }
 }
