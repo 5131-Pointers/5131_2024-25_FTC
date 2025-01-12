@@ -16,6 +16,7 @@ import com.acmerobotics.roadrunner.Vector2d;
 
 @TeleOp(name = "ServoTest", group = "Linear Opmode")
 public class ServoTest extends LinearOpMode {
+    double wristPosition = 0.5;
 
     public CRServo intakeServo1;
     public CRServo intakeServo2;
@@ -44,6 +45,7 @@ public class ServoTest extends LinearOpMode {
 
             telemetry.update();
 
+
         }
     }
     public void ServoMovement() {
@@ -62,7 +64,7 @@ public class ServoTest extends LinearOpMode {
             intakeServo1.setPower(0);
             intakeServo2.setPower(0);
         }
-        double wristPosition = wrist.getPosition();
+        //double wristPosition = wrist.getPosition();
 
         if (gamepad2.right_bumper) {
             wristPosition += 0.01;
@@ -75,6 +77,9 @@ public class ServoTest extends LinearOpMode {
         }
 
         wristPosition = Range.clip(wristPosition, 0, 1);
+
+        telemetry.addData("wristpos", wristPosition);
+        telemetry.update();
         wrist.setPosition(wristPosition);
 
 
