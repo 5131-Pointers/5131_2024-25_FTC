@@ -24,18 +24,16 @@ public class threadingMecanumDrive extends LinearOpMode {
     public DcMotor LLIFT;
     public DcMotor topRotate;
 
-
-    //2 servos used to grab pixels
     public Servo wrist;
-    public Servo angleServo;
-    //perpendicular servo - goes up and down
-    public CRServo intakeServo1;
-    public CRServo intakeServo2;
+    public Servo rotate;
+    public Servo pinch;
     private int targetPosition = 0; // Initialize target position
     private int topRotateTargetPosition = 0; // Target position for topRotate
 
-    double wristPosition = 0.6;
-    double anglePosition = 0.65;
+    double wristPosition = 0.25;
+    double rotatePosition = 0.7;
+
+    int topRotateSpeed = 20;
     MecanumDrive drive;
 
 
@@ -49,10 +47,9 @@ public class threadingMecanumDrive extends LinearOpMode {
         LLIFT = hardwareMap.dcMotor.get("LLIFT");
         topRotate = hardwareMap.dcMotor.get("topRotate");
 
-        intakeServo1 = hardwareMap.crservo.get("intakeServo1");
-        intakeServo2 = hardwareMap.crservo.get("intakeServo2");
+        rotate = hardwareMap.servo.get("rotate");
         wrist = hardwareMap.servo.get("wrist");
-        angleServo = hardwareMap.servo.get("angleServo");
+        pinch = hardwareMap.servo.get("pinch");
 
         drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
 
@@ -72,11 +69,10 @@ public class threadingMecanumDrive extends LinearOpMode {
         topRotate.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         LLIFT.setDirection(DcMotor.Direction.REVERSE);
-        topRotate.setDirection(DcMotor.Direction.REVERSE);
 
         RLIFT.setPower(1);
         LLIFT.setPower(1);
-        topRotate.setPower(0.8);
+        topRotate.setPower(1);
 
         ExecutorService executorService = Executors.newFixedThreadPool(2);
         executorService.submit(this::mecanumDrive);
@@ -94,6 +90,12 @@ public class threadingMecanumDrive extends LinearOpMode {
             telemetry.addData("RLIFT Encoder", RLIFT.getCurrentPosition());
             telemetry.addData("top Rotate Encoder", topRotate.getCurrentPosition());
             telemetry.addData("TopRotateTargetPosition", topRotateTargetPosition);
+            telemetry.addData("WristPosition", wristPosition);
+            telemetry.addData("Rotate Position", rotatePosition);
+            telemetry.addData("Speed", topRotateSpeed);
+
+
+
 
             telemetry.update();
         }
@@ -125,17 +127,6 @@ public class threadingMecanumDrive extends LinearOpMode {
         drive.updatePoseEstimate();
     }
 
-    /*public void lifting() {
-        if (gamepad2.dpad_up) {
-            targetPosition = Math.min(targetPosition + 25, 1250); // Increment by 50, capped at 1250
-        }
-        if (gamepad2.dpad_down) {
-            targetPosition = Math.max(targetPosition - 25, 0); // Decrement by 50, floored at 0
-        }
-        RLIFT.setTargetPosition(targetPosition);
-        LLIFT.setTargetPosition(targetPosition);
-
-    }*/
 
     public void lifting() {
         // Get the current encoder position for the left lift motor
@@ -189,55 +180,71 @@ public class threadingMecanumDrive extends LinearOpMode {
 
     public void armTesting() {
         if (gamepad2.dpad_down) {
-            topRotate.setPower(0.8);
-            topRotateTargetPosition = topRotateTargetPosition + 2;
+            topRotate.setPower(1);
+            topRotateTargetPosition = topRotateTargetPosition + topRotateSpeed;
 
         }
         // Decrease the target position for topRotate
         if (gamepad2.dpad_up) {
-            topRotate.setPower(0.8);
-            topRotateTargetPosition = topRotateTargetPosition - 2;
+            topRotate.setPower(1);
+            topRotateTargetPosition = topRotateTargetPosition - topRotateSpeed;
 
 
         }
-        if (gamepad2.a) {
+        if (gamepad2.y) {
             topRotate.setPower(0.4);
-            topRotateTargetPosition = 390;
+            topRotateTargetPosition = 1850;
+        }
+        if (gamepad2.a) {
+            topRotate.setPower(0.3);
+            topRotateTargetPosition = 3140;
+        }
+
+        topRotateTargetPosition = Range.clip(topRotateTargetPosition, 0, 3300);
+        if (topRotate.getCurrentPosition() > 2600 && topRotate.getCurrentPosition() < 3000) {
+            topRotateSpeed = 5;
+        }
+        else if (topRotate.getCurrentPosition() > 3000) {
+            topRotateSpeed = 3;
+        }
+        else if (topRotate.getCurrentPosition() < 400) {
+            topRotateSpeed = 5;
+
+        }
+        else {
+            topRotateSpeed = 20;
+
         }
         topRotate.setTargetPosition(topRotateTargetPosition);
     }
     public void ServoMovement() {
-        if (gamepad2.left_trigger > 0.9) { //spit out
-            intakeServo1.setPower(0.7);
-            intakeServo2.setPower(-0.7);
+        if (gamepad2.left_trigger > 0.5) { //spit out
+            pinch.setPosition(0.05);
 
-        } else if (gamepad2.right_trigger > 0.9) { //intake
-            intakeServo1.setPower(-0.75);
-            intakeServo2.setPower(0.75);
-        } else {
-            intakeServo1.setPower(0);
-            intakeServo2.setPower(0);
+        } else if (gamepad2.right_trigger > 0.5) { //intake
+            pinch.setPosition(0.505);
         }
 
-        if (gamepad2.right_bumper) {
+        if (gamepad1.right_bumper) {
             wristPosition += 0.01;
             sleep(5);
-        } else if (gamepad2.left_bumper) {
+        } else if (gamepad1.left_bumper) {
             wristPosition -= 0.01;
             sleep(5);
         }
-        if (gamepad1.right_bumper) {
-            anglePosition += 0.01;
+
+        if (gamepad2.right_bumper) {
+            rotatePosition += 0.01;
             sleep(5);
-        } else if (gamepad1.left_bumper) {
-            anglePosition -= 0.01;
+        } else if (gamepad2.left_bumper) {
+            rotatePosition -= 0.01;
             sleep(5);
         }
 
-        wristPosition = Range.clip(wristPosition, 0, 1);
+        wristPosition = Range.clip(wristPosition, 0.1, 0.9);
         wrist.setPosition(wristPosition);
-        anglePosition = Range.clip(anglePosition, 0, 1);
-        angleServo.setPosition(anglePosition);
+        rotatePosition = Range.clip(rotatePosition, 0, 1);
+        rotate.setPosition(rotatePosition);
 
 
     }
